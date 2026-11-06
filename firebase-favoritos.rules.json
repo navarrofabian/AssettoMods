@@ -1,0 +1,13 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "favorites": {
+      ".read": true,
+      "$id": {
+        ".write": "$id.matches(/^[A-Za-z0-9_-]{10,150}$/)",
+        ".validate": "newData.val() === true"
+      }
+    }
+  }
+}

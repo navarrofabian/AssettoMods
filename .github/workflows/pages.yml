@@ -34,6 +34,8 @@ jobs:
           DRIVE_ROOT_ID: ${{ secrets.DRIVE_ROOT_ID }}
       - run: npm test
       - run: npm run build
+        env:
+          FAVORITES_DATABASE_URL: ${{ vars.FAVORITES_DATABASE_URL }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:

@@ -29,3 +29,14 @@ Para publicar cambios de nombres, categorías o imágenes hechos después en tu 
 Instalá Node.js 22 o posterior y ejecutá `npm install`, `npm test` y `npm run build`. La carpeta `dist` contiene la web lista para publicar. Servila mediante un servidor HTTP estático: abrir `index.html` directamente con doble clic no permite cargar el catálogo en todos los navegadores. Para volver a importar la biblioteca local, usá `npm run export:local` con el servidor original iniciado.
 
 GitHub Pages y Actions tienen límites gratuitos y sus condiciones pueden cambiar. Para editar desde Internet o subir mods sin depender de la PC se necesitará un backend con almacenamiento persistente y acceso protegido; no hay una forma segura de proporcionar operaciones de escritura anónimas usando únicamente Pages.
+
+## Favoritos compartidos en la web pública
+
+La web admite una base **Firebase Realtime Database dedicada exclusivamente a favoritos**. No usa credenciales de Drive ni exige registro a los visitantes. La URL de la base es pública y no es una contraseña. Como no hay identificación, **cualquier visitante o programa puede agregar o quitar favoritos** y consumir la cuota; las reglas únicamente limitan el formato y las rutas accesibles. No guardes información privada en esa base. Si se necesita impedir cambios de terceros, habrá que agregar control de acceso.
+
+1. Creá un proyecto de Firebase y una Realtime Database con el plan gratuito disponible. Si tu institución limita Firebase, puede hacer falta otra cuenta o autorización institucional.
+2. En la consola de Realtime Database, abrí **Rules / Reglas**, copiá el contenido exacto de `firebase-favoritos.rules.json` y publicalo. La configuración por defecto bloquea el acceso hasta que se publiquen las reglas.
+3. Copiá la URL HTTPS que aparece en **Data / Datos**, sin la barra final. En GitHub, abrí **Settings → Secrets and variables → Actions → Variables → New repository variable**. Creá `FAVORITES_DATABASE_URL` con esa URL. Es una variable pública de configuración, no un secreto.
+4. En **Actions → Publicar biblioteca → Run workflow**, iniciá una publicación manual. Una vez terminada, abrí la web pública en dos dispositivos, marcá un mod como favorito y comprobá que aparece en el otro al recargar. Luego desmarcalo si era una prueba.
+
+Los favoritos públicos y los de la versión local son independientes. El cliente público vuelve a consultar los cambios periódicamente. Si falla la conexión o las reglas rechazan una operación, la página muestra un error. Firebase aplica límites al plan gratuito y puede restringir el servicio si se exceden.
