@@ -29,7 +29,7 @@ for (const [id, cover] of Object.entries(data.covers)) {
   if (images.length) covers[id] = {kind:'manual',url:images[0].url,version:images[0].version,images};
 }
 await fs.writeFile(path.join(dist,'catalogo.json'),JSON.stringify({mods,covers,connected:true,status:{running:false},zipImport:{running:false,message:'Sin iniciar'}}));
-const databaseUrl = (process.env.FAVORITES_DATABASE_URL || '').trim().replace(/\/$/,'');
+const databaseUrl = (process.env.FAVORITES_DATABASE_URL || 'https://assettomods-ea691-default-rtdb.firebaseio.com').trim().replace(/\/$/,'');
 if (databaseUrl && !/^https:\/\/[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:firebaseio\.com|firebasedatabase\.app)$/i.test(databaseUrl)) throw new Error('La URL de Firebase no es válida');
 await fs.writeFile(path.join(dist,'favoritos-config.json'),JSON.stringify({databaseUrl}));
 await fs.copyFile(path.join(root,'frontend/index.html'),path.join(dist,'index.html'));
