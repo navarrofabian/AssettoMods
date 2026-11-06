@@ -1,0 +1,31 @@
+# Assetto Corsa Mods: publicación en GitHub Pages
+
+Esta carpeta es una versión independiente para publicar. La aplicación original y sus datos siguen en `../assetto-library`. GitHub Pages sirve archivos estáticos: la página pública permite consultar, buscar, filtrar y navegar las galerías. Los botones de descarga abren Drive; Google puede pedir inicio de sesión o confirmar archivos grandes. Los visitantes necesitan permiso de Drive para cada archivo; no se modifican permisos ni se publican automáticamente los archivos.
+
+El catálogo, los nombres, los identificadores de Drive y las imágenes incluidas en esta carpeta serán públicos. No subas esta carpeta si no querés que esa información sea visible. Las portadas se optimizaron y copiaron, sin borrar las originales. La edición de metadatos y portadas sigue disponible en la aplicación de tu PC. No hay edición ni subida pública: sin protección, habilitar operaciones que modifican el Drive sería inseguro. La aplicación local actual permite subir imágenes, pero no implementa la subida de archivos de mods desde la web.
+
+## Publicar
+
+1. Creá un repositorio **público** en GitHub. No incluyas la carpeta `assetto-library` ni su carpeta `data`.
+2. Subí el contenido de esta carpeta, incluida `.github`, a la rama `main`. No subas `node_modules`, `dist`, `.runtime`, archivos `.env` ni credenciales. El `.gitignore` los excluye al usar Git. Revisá lo que vas a publicar antes de confirmar.
+3. En el repositorio, abrí **Settings → Pages → Build and deployment → Source → GitHub Actions**.
+4. En **Settings → Secrets and variables → Actions → New repository secret**, creá estos cuatro secretos (copiá los valores directamente en GitHub; nunca en un archivo del repositorio ni en un mensaje):
+   - `GOOGLE_CLIENT_ID`: propiedad `web.client_id` del archivo `client_secret…json` que descargaste de Google Cloud.
+   - `GOOGLE_CLIENT_SECRET`: propiedad `web.client_secret` del mismo archivo.
+   - `GOOGLE_REFRESH_TOKEN`: propiedad `refresh_token` del archivo `data/token.json` de la aplicación local original.
+   - `DRIVE_ROOT_ID`: `1hy86MXbxl-ctKyhfetA4Dmdcn8J461Dt`.
+5. En la pestaña **Actions**, elegí **Publicar biblioteca** y ejecutá **Run workflow**, seleccionando `main`. Verificá que termine correctamente. En **Settings → Pages** aparecerá la dirección pública. Abrila y probá búsqueda, portadas y un enlace de descarga con una cuenta autorizada en Drive.
+
+Sin secretos se publica la copia actual, pero no se actualiza desde Drive. Si solo falta alguno, la publicación falla para evitar resultados incompletos. Las credenciales se usan solo en el proceso privado de GitHub Actions y no se copian al sitio. Un administrador del repositorio puede cambiar los procesos: compartí ese acceso solo con personas de confianza. Google puede revocar el permiso o la institución puede restringir la aplicación; en ese caso revisá el error de Actions y los permisos de Workspace.
+
+## Actualizaciones
+
+Cada cambio en `main`, ejecución manual o ejecución programada (aproximadamente cada 6 horas) consulta Drive en modo lectura. GitHub puede retrasar o desactivar tareas programadas; no hay garantía de horario exacto. Las modificaciones manuales del catálogo publicado se conservan usando la copia del repositorio como base. Si falla la consulta, no se reemplaza la página anterior. No se borra ni modifica nada en Drive.
+
+Para publicar cambios de nombres, categorías o imágenes hechos después en tu PC: iniciá primero la biblioteca local, abrí una terminal en esta carpeta y ejecutá `npm install` y luego `npm run export:local`. Revisá los cambios en `snapshot` y subilos a `main`. Si los archivos se cambiaron en Drive pero no editaste metadatos o imágenes locales, no hace falta hacer esto: la tarea programada los detecta. Las portadas nuevas no se extraen automáticamente en la web pública.
+
+## Probar en la PC
+
+Instalá Node.js 22 o posterior y ejecutá `npm install`, `npm test` y `npm run build`. La carpeta `dist` contiene la web lista para publicar. Servila mediante un servidor HTTP estático: abrir `index.html` directamente con doble clic no permite cargar el catálogo en todos los navegadores. Para volver a importar la biblioteca local, usá `npm run export:local` con el servidor original iniciado.
+
+GitHub Pages y Actions tienen límites gratuitos y sus condiciones pueden cambiar. Para editar desde Internet o subir mods sin depender de la PC se necesitará un backend con almacenamiento persistente y acceso protegido; no hay una forma segura de proporcionar operaciones de escritura anónimas usando únicamente Pages.
