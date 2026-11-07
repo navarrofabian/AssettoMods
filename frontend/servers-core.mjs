@@ -1,9 +1,19 @@
 const idPattern=/^[A-Za-z0-9_][A-Za-z0-9_.-]{0,99}$/;
 function line(value,label){const s=String(value??'').trim();if(/[\r\n\0\[\]]/.test(s))throw Error(`${label} contiene caracteres no permitidos.`);return s;}
-function identifier(value,label){const s=line(value,label);if(!idPattern.test(s)||s==='.'||s==='..')throw Error(`Indicá el identificador interno válido de ${label}.`);return s;}
+function identifier(value,label){const s=line(value,label);if(!idPattern.test(s)||s==='.'||s==='..')throw Error(`Elegí ${label} en la lista de contenido instalado (identificador inválido).`);return s;}
 function number(value,label,min,max){const n=Number(value);if(!Number.isInteger(n)||n<min||n>max)throw Error(`${label} debe estar entre ${min} y ${max}.`);return n;}
 function url(value,label){const s=String(value||'').trim();if(!s)return '';try{const u=new URL(s);if(u.protocol!=='https:'||u.username||u.password)throw Error();return u.href;}catch{throw Error(`El enlace de ${label} debe ser una URL HTTPS válida.`);}}
 export function driveDownload(id){if(!/^[A-Za-z0-9_-]{10,150}$/.test(id||''))return '';return 'https://drive.google.com/uc?export=download&id='+encodeURIComponent(id);}
+function words(value){return [...new Set(String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\.(zip|rar|7z)$/,'').replace(/(?:[\s_.-]v\d+(?:[\s_.-]\d+)*)$/,'').split(/[^a-z0-9]+/).filter(Boolean))];}
+// A guess is only accepted when it is unique and substantially matches the name.
+export function matchInstalled(value,items){
+  if(!value||!Array.isArray(items))return '';
+  if(items.includes(value))return value;
+  const source=words(value);if(!source.length)return '';
+  if(source.length<2)return '';
+  const matches=items.filter(id=>{const target=words(id);return target.length===source.length&&source.every(t=>target.includes(t));});
+  return matches.length===1?matches[0]:'';
+}
 export function generateServerFiles(p){
   const name=line(p.name,'Nombre del servidor');if(!name||name.length>120)throw Error('Indicá un nombre de servidor.');
   const track=identifier(p.trackId,'circuito'),layout=p.layout?identifier(p.layout,'variante'):'';
