@@ -1,0 +1,45 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "favorites": {
+      ".read": true,
+      "$id": {
+        ".write": "$id.matches(/^[A-Za-z0-9_-]{10,150}$/)",
+        ".validate": "newData.val() === true"
+      }
+    },
+    "libraryEdits": {
+      ".read": true,
+      "$id": {
+        ".write": "auth != null && auth.token.email_verified === true && auth.token.firebase.sign_in_provider === 'google.com' && (auth.token.email === 'navarrofabian315@gmail.com' || auth.token.email === 'aguspaz133@gmail.com') && $id.matches(/^[A-Za-z0-9_-]{10,150}$/)",
+        "displayName": {
+          ".validate": "newData.isString() && newData.val().length <= 200"
+        },
+        "category": {
+          ".validate": "newData.isString() && newData.val().length <= 200"
+        },
+        "subcategory": {
+          ".validate": "newData.isString() && newData.val().length <= 200"
+        },
+        "scope": {
+          ".validate": "newData.isString() && newData.val().length <= 200"
+        },
+        "country": {
+          ".validate": "newData.isString() && newData.val().length <= 200"
+        },
+        "group": {
+          ".validate": "newData.isString() && newData.val().length <= 200"
+        },
+        "tags": {
+          "$tag": {
+            ".validate": "$tag.matches(/^([0-9]|1[0-9])$/) && newData.isString() && newData.val().length <= 40"
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    }
+  }
+}
