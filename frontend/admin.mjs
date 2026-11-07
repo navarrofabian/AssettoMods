@@ -41,10 +41,8 @@ export async function saveCover(id,ref,value){
   if(!auth?.currentUser)throw Error('Iniciá sesión primero.');
   if(!/^[A-Za-z0-9_-]{10,150}$/.test(id)||!['overrides','added'].includes(ref?.type)||!/^[A-Za-z0-9_-]{1,70}$/.test(ref?.key||'')||typeof value!=='string'||!value.startsWith('data:image/webp;base64,')||value.length>250000)throw Error('Imagen inválida.');
   try {
-    await databaseSdk.update(databaseSdk.ref(database),{
-      [`customCovers/${id}/${ref.type}/${ref.key}`]:value,
-      [`customCoverIndex/${id}`]:true
-    });
+    await databaseSdk.set(databaseSdk.ref(database,`customCoverIndex/${id}`),true);
+    await databaseSdk.set(databaseSdk.ref(database,`customCovers/${id}/${ref.type}/${ref.key}`),value);
   } catch { throw Error('No se pudo guardar la imagen. Revisá la conexión y los permisos.'); }
 }
 
