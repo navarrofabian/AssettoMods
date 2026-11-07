@@ -1,12 +1,13 @@
 import http from 'node:http';
 import {spawn} from 'node:child_process';
-import {readFile,realpath,readdir} from 'node:fs/promises';
+import {readFile,realpath} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {verifyFirebaseToken} from './auth.mjs';
 import {preparePreset} from './prepare.mjs';
 import {createDownloadBridge} from './download-bridge.mjs';
 import {createDriveAuth} from './drive-auth.mjs';
+import {getInstalledContent} from './installed-content.mjs';
 const local=path.dirname(fileURLToPath(import.meta.url));
 const config=JSON.parse(await readFile(path.join(local,'agent-config.json'),'utf8').catch(()=>{throw Error('Falta local-agent/agent-config.json. Consultá SERVIDORES.md.')}));
 if(!path.isAbsolute(config.serverDirectory||'')||!['AssettoServer.exe','acServer.exe'].includes(config.executable))throw Error('Configurá una carpeta absoluta y un ejecutable admitido.');
@@ -32,7 +33,7 @@ async function authorize(req){const match=/^Bearer ([A-Za-z0-9_.-]+)$/.exec(req.
 async function start(prepared,preset){if(processHandle)throw Error('El servidor ya está iniciado por este agente.');activePort=Number(preset.httpPort);let child=spawn(executable,['-c',path.join(prepared.directory,'server_cfg.ini'),'-e',path.join(prepared.directory,'entry_list.ini')],{cwd:prepared.workingDirectory,stdio:'ignore',windowsHide:true});processHandle=child;child.once('exit',()=>{if(processHandle===child)processHandle=null});await new Promise((resolve,reject)=>{child.once('spawn',resolve);child.once('error',reject)}).catch(e=>{if(processHandle===child)processHandle=null;throw e});for(let i=0;i<20;i++){if(processHandle!==child||child.exitCode!==null)throw Error('AssettoServer se cerró al iniciar. Revisá el contenido y los registros de la configuración aislada.');try{const response=await fetch(`http://127.0.0.1:${activePort}/INFO`,{signal:AbortSignal.timeout(400)});if(response.ok)return;}catch{}await new Promise(resolve=>setTimeout(resolve,400));}throw Error('El proceso arrancó pero todavía no responde. Consultá su estado y los registros.');}
 async function stop(){if(!processHandle)throw Error('No hay un servidor iniciado por este agente.');const child=processHandle;await new Promise((resolve,reject)=>{let timer=setTimeout(()=>reject(Error('El servidor no se detuvo.')),5000);child.once('exit',()=>{clearTimeout(timer);resolve()});if(!child.kill()){clearTimeout(timer);reject(Error('No se pudo detener el servidor.'));}});}
 async function status(){let players=[];if(processHandle)try{let r=await fetch(`http://127.0.0.1:${activePort}/JSON0`,{signal:AbortSignal.timeout(1500)});if(r.ok){let data=await r.json();players=(data.Cars||[]).filter(c=>c.IsConnected).map(c=>String(c.DriverName||'Jugador').slice(0,80));}}catch{}return {running:!!processHandle,players,bridgeBase:config.bridgeBase||''};}
-async function installedContent(){const list=async sub=>{try{return (await readdir(path.join(dir,'content',sub),{withFileTypes:true})).filter(x=>x.isDirectory()&&/^[A-Za-z0-9_][A-Za-z0-9_.-]{0,99}$/.test(x.name)).slice(0,5000).map(x=>x.name);}catch{return [];}};return {cars:await list('cars'),tracks:await list('tracks')};}
+async function installedContent(){return getInstalledContent(dir,config.gameDirectory);}
 async function checkDrive(id){
   if(!/^[A-Za-z0-9_-]{10,150}$/.test(id||''))throw Error('Identificador de Drive inválido.');
   let target=new URL('https://drive.google.com/uc?export=download&id='+encodeURIComponent(id));

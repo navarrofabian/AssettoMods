@@ -1,5 +1,6 @@
 {
   "serverDirectory": "C:\\ruta\\a\\AssettoServer",
+  "gameDirectory": "C:\\ruta\\a\\assettocorsa",
   "executable": "AssettoServer.exe",
   "serverHttpPort": 8081,
   "driveCredentialsPath": "C:\\ruta\\privada\\client_secret.json",
