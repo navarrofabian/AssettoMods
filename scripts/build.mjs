@@ -35,6 +35,7 @@ await fs.writeFile(path.join(dist,'favoritos-config.json'),JSON.stringify({datab
 await fs.copyFile(path.join(root,'frontend/index.html'),path.join(dist,'index.html'));
 await fs.copyFile(path.join(root,'frontend/favorites.mjs'),path.join(dist,'favorites.mjs'));
 await fs.copyFile(path.join(root,'frontend/admin.mjs'),path.join(dist,'admin.mjs'));
+for (const name of ['servers.html','servers.css','servers.mjs','servers-core.mjs']) await fs.copyFile(path.join(root,'frontend',name),path.join(dist,name));
 await fs.writeFile(path.join(dist,'firebase-config.json'),JSON.stringify({apiKey:process.env.FIREBASE_WEB_API_KEY || ''}));
 for (const name of ['assetto-icon.png','nascar.png','actc.png','editar.png','drive.png','actc.avif']) await fs.copyFile(path.join(root,'frontend/assets',name),path.join(dist,'assets',name));
 console.log(`Versión preparada: ${mods.length} mods, ${Object.keys(covers).length} con portadas.`);

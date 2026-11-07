@@ -38,3 +38,9 @@ test('rechaza imágenes de entrada demasiado grandes',async()=>{
   await assert.rejects(compressImage({type:'image/jpeg',size:15*1024*1024+1}),/15 MB/);
   await assert.rejects(compressImage({type:'application/pdf',size:100}),/JPG, PNG o WebP/);
 });
+test('las configuraciones de servidores solo pueden leerse y escribirse por administradores verificados',async()=>{
+  const rules=JSON.parse(await readFile(new URL('../firebase-admin.rules.json',import.meta.url)));
+  assert.match(rules.rules.serverPresets['.read'],/email_verified/);
+  assert.match(rules.rules.serverPresets.$id['.write'],/navarrofabian315@gmail\.com/);
+  assert.match(rules.rules.serverPresets.$id['.write'],/aguspaz133@gmail\.com/);
+});

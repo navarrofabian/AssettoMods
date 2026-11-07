@@ -13,6 +13,13 @@ export async function setupAuth(apiKey, onChange){
 }
 export async function login(){return sdk.signInWithPopup(auth,new sdk.GoogleAuthProvider());}
 export async function logout(){return sdk.signOut(auth);}
+export async function getAdminToken(){if(!auth?.currentUser||!auth.currentUser.emailVerified||!admins.has(auth.currentUser.email?.toLowerCase()))throw Error('Iniciá sesión como administrador.');return auth.currentUser.getIdToken();}
+export async function readServerPresets(){await getAdminToken();const snapshot=await databaseSdk.get(databaseSdk.ref(database,'serverPresets'));return snapshot.val()||{};}
+export async function saveServerPreset(id,value){
+  await getAdminToken();if(!/^[A-Za-z0-9_-]{10,80}$/.test(id))throw Error('Identificador de configuración inválido.');
+  const json=JSON.stringify(value);if(json.length>60000)throw Error('La configuración es demasiado grande.');
+  await databaseSdk.set(databaseSdk.ref(database,'serverPresets/'+id),json);
+}
 async function read(path){let r=await fetch(root+path+'.json',{cache:'no-store'});if(!r.ok)throw Error('No se pudieron leer las ediciones.');return r.json();}
 async function write(path,value){if(!auth?.currentUser)throw Error('Iniciá sesión primero.');try{await databaseSdk.set(databaseSdk.ref(database,path),value);}catch{throw Error('No se pudo guardar: revisá los permisos de administrador.');}}
 export const readEdits=()=>read('/libraryEdits');

@@ -1,0 +1,5 @@
+{
+  "serverDirectory": "C:\\ruta\\a\\AssettoServer",
+  "executable": "AssettoServer.exe",
+  "serverHttpPort": 8081
+}
