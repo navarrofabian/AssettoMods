@@ -1,5 +1,7 @@
 {
   "serverDirectory": "C:\\ruta\\a\\AssettoServer",
   "executable": "AssettoServer.exe",
-  "serverHttpPort": 8081
+  "serverHttpPort": 8081,
+  "driveCredentialsPath": "C:\\ruta\\privada\\client_secret.json",
+  "driveTokenPath": "C:\\ruta\\privada\\token.json"
 }
