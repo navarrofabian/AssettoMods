@@ -8,13 +8,18 @@ import {preparePreset} from './prepare.mjs';
 import {createDownloadBridge} from './download-bridge.mjs';
 import {createDriveAuth} from './drive-auth.mjs';
 import {getInstalledContent} from './installed-content.mjs';
+import {installFromGame} from './install-content.mjs';
+import {createArchiveImporter} from './archive-import.mjs';
+import os from 'node:os';
 const local=path.dirname(fileURLToPath(import.meta.url));
 const config=JSON.parse(await readFile(path.join(local,'agent-config.json'),'utf8').catch(()=>{throw Error('Falta local-agent/agent-config.json. Consultá SERVIDORES.md.')}));
 if(!path.isAbsolute(config.serverDirectory||'')||!['AssettoServer.exe','acServer.exe'].includes(config.executable))throw Error('Configurá una carpeta absoluta y un ejecutable admitido.');
 const dir=await realpath(config.serverDirectory),executable=await realpath(path.join(dir,config.executable));
 if(path.dirname(executable).toLowerCase()!==dir.toLowerCase())throw Error('El ejecutable debe estar dentro de la carpeta configurada.');
 const port=Number(config.serverHttpPort||8081);if(!Number.isInteger(port)||port<1||port>65535)throw Error('Puerto HTTP inválido.');
-const bridge=config.driveCredentialsPath&&config.driveTokenPath?createDownloadBridge({accessToken:createDriveAuth({credentialsPath:config.driveCredentialsPath,tokenPath:config.driveTokenPath})}):null;
+const driveAuth=config.driveCredentialsPath&&config.driveTokenPath?createDriveAuth({credentialsPath:config.driveCredentialsPath,tokenPath:config.driveTokenPath}):null;
+const bridge=driveAuth?createDownloadBridge({accessToken:driveAuth}):null;
+const importer=driveAuth?createArchiveImporter({server:dir,accessToken:driveAuth,runtime:path.join(local,'runtime')}):null;
 if(bridge)http.createServer(bridge.handle).listen(8877,'127.0.0.1');
 function sharedPreset(preset,base){
   if(!bridge)throw Error('Falta configurar la conexión local con Drive en el agente.');
@@ -22,6 +27,7 @@ function sharedPreset(preset,base){
   function share(value){if(!value)return '';let u;try{u=new URL(value);}catch{throw Error('Enlace de archivo inválido.');}let id='';
     if(u.hostname==='drive.google.com'&&u.protocol==='https:')id=u.searchParams.get('id')||'';
     else if(u.origin===root.origin&&u.pathname.startsWith('/descarga/'))id=bridge.verify(u.pathname.slice('/descarga/'.length))||'';
+    else if(u.protocol==='https:'&&!u.username&&!u.password)return u.href;
     if(!id)throw Error('Solo se pueden compartir enlaces de Drive o enlaces vigentes de este agente.');
     return `${root.origin}/descarga/${bridge.issue(id)}`;
   }
@@ -32,7 +38,7 @@ let processHandle=null,certs=null,expires=0,busy=false,activePort=port;
 async function authorize(req){const match=/^Bearer ([A-Za-z0-9_.-]+)$/.exec(req.headers.authorization||'');if(!match)throw Error('Falta iniciar sesión');if(!certs||Date.now()>expires){const r=await fetch(keysUrl,{signal:AbortSignal.timeout(10000)});if(!r.ok)throw Error('No se pudo verificar Google');certs=await r.json();expires=Date.now()+3600000;}return verifyFirebaseToken(match[1],certs);}
 async function start(prepared,preset){if(processHandle)throw Error('El servidor ya está iniciado por este agente.');activePort=Number(preset.httpPort);let child=spawn(executable,['-c',path.join(prepared.directory,'server_cfg.ini'),'-e',path.join(prepared.directory,'entry_list.ini')],{cwd:prepared.workingDirectory,stdio:'ignore',windowsHide:true});processHandle=child;child.once('exit',()=>{if(processHandle===child)processHandle=null});await new Promise((resolve,reject)=>{child.once('spawn',resolve);child.once('error',reject)}).catch(e=>{if(processHandle===child)processHandle=null;throw e});for(let i=0;i<20;i++){if(processHandle!==child||child.exitCode!==null)throw Error('AssettoServer se cerró al iniciar. Revisá el contenido y los registros de la configuración aislada.');try{const response=await fetch(`http://127.0.0.1:${activePort}/INFO`,{signal:AbortSignal.timeout(400)});if(response.ok)return;}catch{}await new Promise(resolve=>setTimeout(resolve,400));}throw Error('El proceso arrancó pero todavía no responde. Consultá su estado y los registros.');}
 async function stop(){if(!processHandle)throw Error('No hay un servidor iniciado por este agente.');const child=processHandle;await new Promise((resolve,reject)=>{let timer=setTimeout(()=>reject(Error('El servidor no se detuvo.')),5000);child.once('exit',()=>{clearTimeout(timer);resolve()});if(!child.kill()){clearTimeout(timer);reject(Error('No se pudo detener el servidor.'));}});}
-async function status(){let players=[];if(processHandle)try{let r=await fetch(`http://127.0.0.1:${activePort}/JSON0`,{signal:AbortSignal.timeout(1500)});if(r.ok){let data=await r.json();players=(data.Cars||[]).filter(c=>c.IsConnected).map(c=>String(c.DriverName||'Jugador').slice(0,80));}}catch{}return {running:!!processHandle,players,bridgeBase:config.bridgeBase||''};}
+async function status(){let players=[];if(processHandle)try{let r=await fetch(`http://127.0.0.1:${activePort}/JSON0`,{signal:AbortSignal.timeout(1500)});if(r.ok){let data=await r.json();players=(data.Cars||[]).filter(c=>c.IsConnected).map(c=>String(c.DriverName||'Jugador').slice(0,80));}}catch{}const radmin=Object.entries(os.networkInterfaces()).find(([name])=>/radmin/i.test(name))?.[1]?.find(x=>x.family==='IPv4'&&!x.internal)?.address;return {running:!!processHandle,players,bridgeBase:config.bridgeBase||'',joinHost:config.joinHost||radmin||''};}
 async function installedContent(){return getInstalledContent(dir,config.gameDirectory);}
 async function checkDrive(id){
   if(!/^[A-Za-z0-9_-]{10,150}$/.test(id||''))throw Error('Identificador de Drive inválido.');
@@ -53,10 +59,12 @@ http.createServer(async(req,res)=>{
   if(req.method==='OPTIONS')return json(res,204,{});
   try{await authorize(req);const requestUrl=new URL(req.url,'http://127.0.0.1:8876');if(requestUrl.pathname==='/status'&&req.method==='GET')return json(res,200,await status());
     if(requestUrl.pathname==='/content'&&req.method==='GET')return json(res,200,await installedContent());
+    if(requestUrl.pathname==='/import-status'&&req.method==='GET')return json(res,200,importer?.status()||{status:'error',phase:'Falta la conexión local con Drive.'});
     if(requestUrl.pathname==='/check-drive'&&req.method==='GET')return json(res,200,await checkDrive(requestUrl.searchParams.get('id')));
     if(req.method==='POST'&&req.url==='/share'){const data=await readPreset(req);return json(res,200,{preset:sharedPreset(data,data.bridgeBase)});}
+    if(req.method==='POST'&&req.url==='/import-mod'){if(!importer)throw Error('Falta la conexión local con Drive.');const data=await readPreset(req);return json(res,202,importer.start(data.modId,data.kind));}
     if(req.method!=='POST'||!['/start','/stop','/restart'].includes(req.url))return json(res,404,{error:'No encontrado'});
     if(busy)return json(res,409,{error:'Hay una operación en curso.'});busy=true;
-    try{if(req.url==='/stop'){await stop();return json(res,200,await status());}if(req.url==='/start'&&processHandle)throw Error('El servidor ya está iniciado por este agente.');const preset=await readPreset(req);const prepared=await preparePreset(dir,path.join(local,'runtime'),preset,config.trackParameters);if(req.url==='/restart'&&processHandle)await stop();await start(prepared,preset);return json(res,200,{...await status(),message:prepared.warnings.join(' ')});}finally{busy=false;}
+    try{if(req.url==='/stop'){await stop();return json(res,200,await status());}if(req.url==='/start'&&processHandle)throw Error('El servidor ya está iniciado por este agente.');const preset=await readPreset(req);if(config.gameDirectory)await installFromGame(dir,config.gameDirectory,preset);const prepared=await preparePreset(dir,path.join(local,'runtime'),preset,config.trackParameters);if(req.url==='/restart'&&processHandle)await stop();await start(prepared,preset);return json(res,200,{...await status(),message:prepared.warnings.join(' ')});}finally{busy=false;}
   }catch(e){return json(res,/Token|Firma|Cuenta|sesión|Google/.test(e.message)?401:400,{error:e.message});}
 }).listen(8876,'127.0.0.1',()=>console.log('Agente disponible en 127.0.0.1:8876; solo acepta administradores verificados.'));

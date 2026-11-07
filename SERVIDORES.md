@@ -18,7 +18,15 @@ El agente escucha solo en `127.0.0.1:8876`, acepta solicitudes del dominio de la
 
 El servidor se ejecuta en un directorio de trabajo aislado que enlaza al contenido instalado y utiliza una copia de `data_track_params.ini`. Las coordenadas opcionales de circuitos no reconocidos se configuran localmente en `trackParameters` dentro de `agent-config.json`; para la prueba de Buenos Aires ya están configuradas en esta computadora. Los archivos originales del servidor no se modifican. Algunas instalaciones o plugins personalizados pueden requerir recursos adicionales y deben probarse antes de usarlos.
 
-El agente no configura Radmin, puertos de red, firewall, instalaciones de mods ni acceso a Drive. Clasificación y carrera son experimentales en AssettoServer. Antes de usarlo con jugadores, verificá los IDs, puertos, versiones, rutas, IA y los enlaces; hacé una prueba con Content Manager y un cliente sin el contenido instalado.
+El agente no configura Radmin, puertos de red, firewall ni permisos de Drive. Clasificación y carrera son experimentales en AssettoServer. Antes de usarlo con jugadores, verificá puertos, versiones, IA y enlaces; hacé una prueba con Content Manager y un cliente sin el contenido instalado.
+
+## Preparar sesiones
+
+La vista de Assetto Server abre con Buenos Aires, variante 12, y los siete autos identificados dentro del paquete eTC de la biblioteca. El selector muestra los favoritos primero, admite búsqueda y filtro nacional. Las sesiones guardadas siguen usando el almacenamiento privado existente. La hora, clima, práctica, clasificación y carrera se ajustan en la vista principal; opciones de red, archivos y descargas quedan en el desplegable avanzado.
+
+Si un mod elegido ya está instalado en el juego, el agente copia al servidor los datos necesarios cuando se inicia la sesión, sin sustituir contenido. Si no está instalado, intenta descargar el ZIP, RAR o 7z de Drive a una carpeta temporal, identificar autos o circuitos y preparar solamente los datos necesarios. El original de Drive permanece intacto; los temporales se borran al finalizar. El proceso tiene límites de 10 GB por archivo descargado, 512 MB de datos extraídos, 200 mods y disponibilidad de espacio; archivos cifrados, partidos o con una estructura que no se pueda identificar pueden necesitar instalación manual. Para autos se requiere `data.acd`; para circuitos se identifica `data/surfaces.ini`. Si faltan coordenadas del circuito en AssettoServer, puede ser necesaria configuración adicional.
+
+Al iniciar, los enlaces de Drive se convierten en enlaces temporales del puente. Cada persona con el enlace puede descargar el archivo mientras esté vigente; Content Manager y la versión del mod deben ser compatibles. «Unirse con Content Manager» usa la dirección configurada o la dirección Radmin detectada: los jugadores deben poder alcanzar esa dirección y los puertos del servidor. El túnel HTTPS de descargas no transporta la conexión de juego.
 
 ## Puente de descargas privadas
 
