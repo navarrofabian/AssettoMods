@@ -22,6 +22,8 @@ Sin secretos se publica la copia actual, pero no se actualiza desde Drive. Si so
 
 Cada cambio en `main`, ejecución manual o ejecución programada (aproximadamente cada 5 minutos) consulta Drive en modo lectura. GitHub puede retrasar o desactivar tareas programadas; no hay garantía de horario exacto. Las modificaciones manuales del catálogo publicado se conservan usando la copia del repositorio como base. Si falla la consulta, no se reemplaza la página anterior. No se borra ni modifica nada en Drive.
 
+El botón «Sincronizar con Drive» del menú abre la ejecución manual en GitHub. Para iniciarla, hay que acceder a GitHub con una cuenta autorizada en el repositorio y elegir «Run workflow» y luego confirmar «Run workflow». La sesión de Google de la biblioteca no concede permisos de GitHub. La sincronización periódica funciona aunque no se use el botón.
+
 Para publicar cambios de nombres, categorías o imágenes hechos después en tu PC: iniciá primero la biblioteca local, abrí una terminal en esta carpeta y ejecutá `npm install` y luego `npm run export:local`. Revisá los cambios en `snapshot` y subilos a `main`. Si los archivos se cambiaron en Drive pero no editaste metadatos o imágenes locales, no hace falta hacer esto: la tarea programada los detecta.
 
 ## Probar en la PC
