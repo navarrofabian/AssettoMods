@@ -1,9 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {generateServerFiles} from '../frontend/servers-core.mjs';
-
-// Autódromo Ciudad de Paraná; coordinates verified against the published circuit location.
-const knownTrackParameters={apvs_parana:{latitude:-31.763056,longitude:-60.376944,timezone:'America/Argentina/Buenos_Aires'}};
+import {resolveTrackLocation,sectionLocation,allowMissingTrackLocation} from './track-location.mjs';
 
 async function directory(p,label){try{if(!(await fs.stat(p)).isDirectory())throw Error();}catch{throw Error(`No se encontró ${label} en el contenido instalado del servidor.`);}}
 export function mergeExtra(original,preset){
@@ -15,7 +13,7 @@ export function mergeExtra(original,preset){
   }
   return text;
 }
-export async function preparePreset(serverDirectory,runtimeDirectory,preset,trackParameters={}){
+export async function preparePreset(serverDirectory,runtimeDirectory,preset,trackParameters={},locationOptions={}){
   const output=generateServerFiles(preset);
   const content=path.join(serverDirectory,'content');
   await directory(path.join(content,'tracks',preset.trackId),'el circuito '+preset.trackId);
@@ -23,10 +21,15 @@ export async function preparePreset(serverDirectory,runtimeDirectory,preset,trac
   for(const car of preset.cars)await directory(path.join(content,'cars',car.id),'el auto '+car.id);
   const cfgDir=path.join(serverDirectory,'cfg');let original='';
   try{const stat=await fs.lstat(path.join(cfgDir,'extra_cfg.yml'));if(!stat.isFile()||stat.size>2*1024*1024)throw Error('El archivo de opciones avanzadas no es válido.');original=await fs.readFile(path.join(cfgDir,'extra_cfg.yml'),'utf8');}catch(e){if(e.code!=='ENOENT')throw e;}
-  const extra=mergeExtra(original,preset);
+  let extra=mergeExtra(original,preset);
   await fs.mkdir(runtimeDirectory,{recursive:true});const outputDir=await fs.mkdtemp(path.join(runtimeDirectory,'servidor-'));
   for(const name of ['data_track_params.ini','csp_extra_options.ini'])try{const source=path.join(cfgDir,name),stat=await fs.lstat(source);if(stat.isFile()&&stat.size<=2*1024*1024)await fs.copyFile(source,path.join(outputDir,name));}catch(e){if(e.code!=='ENOENT')throw e;}
-  const geo=trackParameters[preset.trackId]||knownTrackParameters[preset.trackId];if(geo){const lat=Number(geo.latitude),lon=Number(geo.longitude),tz=String(geo.timezone||'');if(!Number.isFinite(lat)||Math.abs(lat)>90||!Number.isFinite(lon)||Math.abs(lon)>180||!/^[-A-Za-z0-9_+/]+$/.test(tz))throw Error('Coordenadas del circuito inválidas.');const target=path.join(outputDir,'data_track_params.ini');let text=await fs.readFile(target,'utf8').catch(e=>{if(e.code==='ENOENT')return '';throw e});if(!new RegExp(`^\\[${preset.trackId.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\]\\s*$`,'mi').test(text))await fs.writeFile(target,`${text}\n[${preset.trackId}]\nLATITUDE=${lat}\nLONGITUDE=${lon}\nTIMEZONE=${tz}\nNAME=${preset.trackId}\nHEADING_ANGLE=0\n`);}
+  const target=path.join(outputDir,'data_track_params.ini');let params=await fs.readFile(target,'utf8').catch(e=>{if(e.code==='ENOENT')return '';throw e});
+  const resolved=await resolveTrackLocation({serverDirectory,gameDirectory:locationOptions.gameDirectory,trackId:preset.trackId,layout:preset.layout,trackParameters,originalParams:params,fileId:preset.trackMod,accessToken:locationOptions.accessToken,fetchImpl:locationOptions.fetchImpl});
+  if(resolved?.location){const geo=resolved.location,lat=Number(geo.latitude),lon=Number(geo.longitude),tz=String(geo.timezone||'');if(!Number.isFinite(lat)||Math.abs(lat)>90||!Number.isFinite(lon)||Math.abs(lon)>180||!/^[-A-Za-z0-9_+/]+$/.test(tz))throw Error('Coordenadas del circuito inválidas.');try{new Intl.DateTimeFormat('en',{timeZone:tz});}catch{throw Error('Zona horaria del circuito inválida.');}
+    if(!sectionLocation(params,preset.trackId)){const lines=params.split(/\r?\n/),out=[];let skip=false;for(const line of lines){const m=/^\s*\[([^\]]+)\]/.exec(line);if(m)skip=m[1].toLowerCase()===preset.trackId.toLowerCase();if(!skip)out.push(line);}params=out.join('\n')+`\n[${preset.trackId}]\nLATITUDE=${lat}\nLONGITUDE=${lon}\nTIMEZONE=${tz}\nNAME=${preset.trackId}\nHEADING_ANGLE=0\n`;await fs.writeFile(target,params);}
+    if(resolved.fallback)output.warnings.push('Este circuito usa la ubicación predeterminada de Buenos Aires porque no se encontraron sus coordenadas.');
+  }else{extra=allowMissingTrackLocation(extra);output.warnings.push('No se pudo determinar la ubicación del circuito; la hora podría variar entre jugadores.');}
   let files=[];try{files=await fs.readdir(cfgDir);}catch(e){if(e.code!=='ENOENT')throw e;}
   for(const name of files.filter(n=>/^plugin_[A-Za-z0-9_-]+_(?:cfg|config)\.yml$/i.test(n))){const source=path.join(cfgDir,name),stat=await fs.lstat(source);if(stat.isFile()&&stat.size<=2*1024*1024)await fs.copyFile(source,path.join(outputDir,name));}
   await fs.mkdir(path.join(outputDir,'cm_content'));

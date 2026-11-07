@@ -20,6 +20,7 @@ export function generateServerFiles(p){
   const track=identifier(p.trackId,'circuito'),layout=p.layout?identifier(p.layout,'variante'):'';
   const max=number(p.maxClients,'Cantidad de jugadores',1,64),udp=number(p.udpPort,'Puerto UDP',1,65535),tcp=number(p.tcpPort,'Puerto TCP',1,65535),http=number(p.httpPort,'Puerto HTTP',1,65535);
   if(!Array.isArray(p.cars)||!p.cars.length||p.cars.length>64)throw Error('Agregá al menos un auto.');
+  if(p.cars.length>max)throw Error('La cantidad de puestos debe alcanzar para todos los autos elegidos.');
   const cars=p.cars.map((c,i)=>({id:identifier(c.id,`auto ${i+1}`),skin:skinIdentifier(c.skin,`skin del auto ${i+1}`),url:url(c.url,`auto ${i+1}`),version:line(c.version,'Versión')}));
   const trackUrl=url(p.trackUrl,'circuito'),trackVersion=line(p.trackVersion,'Versión del circuito');
   const minutes=number(p.practiceMinutes,'Duración de práctica',1,1440),qualify=number(p.qualifyMinutes,'Clasificación',0,1440),laps=number(p.raceLaps,'Vueltas de carrera',0,999),sun=number(p.sunAngle,'Ángulo del sol',-80,80);

@@ -14,6 +14,7 @@ test('rechaza identificadores inventados o peligrosos y URLs inseguras',()=>{
   assert.throws(()=>generateServerFiles({...base,name:'Nombre\nPASSWORD=123'}),/caracteres/);
   assert.throws(()=>generateServerFiles({...base,cars:[{...base.cars[0],url:'http://localhost/x'}]}),/HTTPS/);
   assert.equal(driveDownload('mal/valor'),'');
+  assert.throws(()=>generateServerFiles({...base,maxClients:1,cars:[base.cars[0],base.cars[0]]}),/puestos/);
   assert.match(generateServerFiles({...base,cars:[{...base.cars[0],skin:'#TC 107 Martínez'}]}).files['entry_list.ini'],/SKIN=#TC 107/);
   assert.throws(()=>generateServerFiles({...base,cars:[{...base.cars[0],skin:'../otra'}]}),/skin/);
 });
