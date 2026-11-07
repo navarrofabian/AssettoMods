@@ -2,6 +2,9 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {generateServerFiles} from '../frontend/servers-core.mjs';
 
+// Autódromo Ciudad de Paraná; coordinates verified against the published circuit location.
+const knownTrackParameters={apvs_parana:{latitude:-31.763056,longitude:-60.376944,timezone:'America/Argentina/Buenos_Aires'}};
+
 async function directory(p,label){try{if(!(await fs.stat(p)).isDirectory())throw Error();}catch{throw Error(`No se encontró ${label} en el contenido instalado del servidor.`);}}
 export function mergeExtra(original,preset){
   let text=original||'# Opciones de AssettoServer\n';const ending=text.includes('\r\n')?'\r\n':'\n';
@@ -23,7 +26,7 @@ export async function preparePreset(serverDirectory,runtimeDirectory,preset,trac
   const extra=mergeExtra(original,preset);
   await fs.mkdir(runtimeDirectory,{recursive:true});const outputDir=await fs.mkdtemp(path.join(runtimeDirectory,'servidor-'));
   for(const name of ['data_track_params.ini','csp_extra_options.ini'])try{const source=path.join(cfgDir,name),stat=await fs.lstat(source);if(stat.isFile()&&stat.size<=2*1024*1024)await fs.copyFile(source,path.join(outputDir,name));}catch(e){if(e.code!=='ENOENT')throw e;}
-  const geo=trackParameters[preset.trackId];if(geo){const lat=Number(geo.latitude),lon=Number(geo.longitude),tz=String(geo.timezone||'');if(!Number.isFinite(lat)||Math.abs(lat)>90||!Number.isFinite(lon)||Math.abs(lon)>180||!/^[-A-Za-z0-9_+/]+$/.test(tz))throw Error('Coordenadas del circuito inválidas.');const target=path.join(outputDir,'data_track_params.ini');let text=await fs.readFile(target,'utf8').catch(e=>{if(e.code==='ENOENT')return '';throw e});if(!new RegExp(`^\\[${preset.trackId.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\]\\s*$`,'mi').test(text))await fs.writeFile(target,`${text}\n[${preset.trackId}]\nLATITUDE=${lat}\nLONGITUDE=${lon}\nTIMEZONE=${tz}\nNAME=${preset.trackId}\nHEADING_ANGLE=0\n`);}
+  const geo=trackParameters[preset.trackId]||knownTrackParameters[preset.trackId];if(geo){const lat=Number(geo.latitude),lon=Number(geo.longitude),tz=String(geo.timezone||'');if(!Number.isFinite(lat)||Math.abs(lat)>90||!Number.isFinite(lon)||Math.abs(lon)>180||!/^[-A-Za-z0-9_+/]+$/.test(tz))throw Error('Coordenadas del circuito inválidas.');const target=path.join(outputDir,'data_track_params.ini');let text=await fs.readFile(target,'utf8').catch(e=>{if(e.code==='ENOENT')return '';throw e});if(!new RegExp(`^\\[${preset.trackId.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\]\\s*$`,'mi').test(text))await fs.writeFile(target,`${text}\n[${preset.trackId}]\nLATITUDE=${lat}\nLONGITUDE=${lon}\nTIMEZONE=${tz}\nNAME=${preset.trackId}\nHEADING_ANGLE=0\n`);}
   let files=[];try{files=await fs.readdir(cfgDir);}catch(e){if(e.code!=='ENOENT')throw e;}
   for(const name of files.filter(n=>/^plugin_[A-Za-z0-9_-]+_(?:cfg|config)\.yml$/i.test(n))){const source=path.join(cfgDir,name),stat=await fs.lstat(source);if(stat.isFile()&&stat.size<=2*1024*1024)await fs.copyFile(source,path.join(outputDir,name));}
   await fs.mkdir(path.join(outputDir,'cm_content'));

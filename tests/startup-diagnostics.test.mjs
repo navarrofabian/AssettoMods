@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {startupMessage} from '../local-agent/startup-diagnostics.mjs';
+test('informa causas conocidas sin mostrar enlaces o datos del registro',()=>{assert.match(startupMessage('No track params found for apvs_parana https://secret.test/token'),/coordenadas/);assert.doesNotMatch(startupMessage('No track params found for apvs_parana https://secret.test/token'),/secret/);assert.match(startupMessage('address already in use'),/puertos/);assert.match(startupMessage('error desconocido'),/registros/);});

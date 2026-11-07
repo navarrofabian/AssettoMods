@@ -18,6 +18,7 @@ test('prepara una copia aislada y conserva la configuración avanzada original',
     const extra=await fs.readFile(path.join(result.directory,'extra_cfg.yml'),'utf8');assert.match(extra,/CustomOption: 42/);assert.match(extra,/EnableAi: true/);assert.doesNotMatch(extra,/^MaxPlayerCount:/m);
     assert.equal(JSON.parse(await fs.readFile(path.join(result.directory,'cm_content','content.json'),'utf8')).track.url,preset.trackUrl);
     const trackParams=await fs.readFile(path.join(result.workingDirectory,'cfg','data_track_params.ini'),'utf8');assert.match(trackParams,/\[monza\]/);assert.match(trackParams,/TIMEZONE=Europe\/Rome/);assert.equal((await fs.realpath(path.join(result.workingDirectory,'content'))),await fs.realpath(path.join(root,'content')));
+    await fs.mkdir(path.join(root,'content','tracks','apvs_parana','variante1'),{recursive:true});const parana=await preparePreset(root,path.join(root,'runtime'),{...preset,trackId:'apvs_parana',layout:'variante1'});const location=await fs.readFile(path.join(parana.workingDirectory,'cfg','data_track_params.ini'),'utf8');assert.match(location,/\[apvs_parana\]/);assert.match(location,/LATITUDE=-31\.763056/);assert.match(location,/TIMEZONE=America\/Argentina\/Buenos_Aires/);
     await assert.rejects(preparePreset(root,path.join(root,'runtime'),{...preset,trackId:'inexistente'}),/No se encontró/);
   }finally{if(path.dirname(root)!==os.tmpdir()||!path.basename(root).startsWith('assetto-agent-test-'))throw Error('Ruta temporal inválida');await fs.rm(root,{recursive:true,force:true});}
 });

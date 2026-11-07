@@ -18,6 +18,8 @@ El agente escucha solo en `127.0.0.1:8876`, acepta solicitudes del dominio de la
 
 El servidor se ejecuta en un directorio de trabajo aislado que enlaza al contenido instalado y utiliza una copia de `data_track_params.ini`. Las coordenadas opcionales de circuitos no reconocidos se configuran localmente en `trackParameters` dentro de `agent-config.json`; para la prueba de Buenos Aires ya están configuradas en esta computadora. Los archivos originales del servidor no se modifican. Algunas instalaciones o plugins personalizados pueden requerir recursos adicionales y deben probarse antes de usarlos.
 
+El agente incluye las coordenadas del [Autódromo Ciudad de Paraná](https://es.wikipedia.org/wiki/Aut%C3%B3dromo_Ciudad_de_Paran%C3%A1) para el mod `apvs_parana`, con zona horaria de Argentina. Se incorporan solo en la copia aislada si no hay ya datos del circuito. El agente informa específicamente cuando falta la ubicación de otro circuito.
+
 El agente no configura Radmin, puertos de red, firewall ni permisos de Drive. Clasificación y carrera son experimentales en AssettoServer. Antes de usarlo con jugadores, verificá puertos, versiones, IA y enlaces; hacé una prueba con Content Manager y un cliente sin el contenido instalado.
 
 ## Preparar sesiones
