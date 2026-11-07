@@ -3,6 +3,7 @@ import {createHash} from 'node:crypto';
 import {spawn} from 'node:child_process';
 import sharp from 'sharp';
 import {findZipPreviews} from './zip-previews.mjs';
+import {selectCoverCandidates} from './cover-queue.mjs';
 
 const credentials=['GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET','GOOGLE_REFRESH_TOKEN'].map(x=>process.env[x]);
 if(credentials.every(x=>!x)){console.log('Sin conexión a Drive: no se buscaron portadas.');process.exit(0)}
@@ -14,8 +15,8 @@ const {access_token:token}=await response.json();if(!token)throw Error('No se re
 const snapshot=JSON.parse(await fs.readFile('snapshot/catalogo.json','utf8'));
 const runtime=JSON.parse(await fs.readFile('.runtime/catalogo.json','utf8'));
 const attempts=JSON.parse(await fs.readFile('snapshot/inspecciones.json','utf8').catch(e=>{if(e.code==='ENOENT')return '{}';throw e;}));
-const known=new Set(snapshot.mods.map(m=>m.id)),limit=Date.now()-30*24*60*60*1000;
-const pending=runtime.mods.filter(m=>!runtime.covers[m.id]&&Number(m.size)>0&&(!known.has(m.id)||Date.parse(m.createdTime||m.modifiedTime||'')>=limit)&&(!attempts[m.id]||attempts[m.id].version!==String(m.modifiedTime||'')||Date.parse(attempts[m.id].retryAfter||'9999-01-01')<=Date.now())).sort((a,b)=>String(b.createdTime||b.modifiedTime||'').localeCompare(String(a.createdTime||a.modifiedTime||''))).slice(0,3);
+const known=new Set(snapshot.mods.map(m=>m.id));
+const pending=selectCoverCandidates(runtime.mods,runtime.covers,attempts,known);
 async function range(file,start,end){
   const length=end-start+1;if(start<0||end>=Number(file.size)||length<1||length>5*1024*1024)throw Error('Rango inválido');
   const r=await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(file.id)}?alt=media&supportsAllDrives=true`,{headers:{Authorization:`Bearer ${token}`,Range:`bytes=${start}-${end}`},signal:AbortSignal.timeout(45000)});
@@ -49,7 +50,7 @@ for(const file of pending){
     attempts[file.id]={version:String(file.modifiedTime||'')};console.log(`${file.name}: ${output.length} portadas encontradas.`);
   }catch(e){attempts[file.id]={version:String(file.modifiedTime||''),retryAfter:new Date(Date.now()+24*60*60*1000).toISOString()};console.log(`${file.name}: no se pudo inspeccionar (${e.message}).`);}
 }
-for(const mod of runtime.mods)if(!known.has(mod.id)){snapshot.mods.push(mod);known.add(mod.id);}
+for(const mod of runtime.mods)if(!known.has(mod.id)){if(!runtime.covers[mod.id]&&!attempts[mod.id])attempts[mod.id]={version:String(mod.modifiedTime||''),pending:true};snapshot.mods.push(mod);known.add(mod.id);}
 await fs.writeFile('snapshot/inspecciones.json',JSON.stringify(attempts));
 await fs.writeFile('snapshot/catalogo.json',JSON.stringify(snapshot));
 await fs.writeFile('.runtime/catalogo.json',JSON.stringify(runtime));
