@@ -10,7 +10,7 @@ function mirrorSelect(original,label){const wrap=document.createElement('label')
 export function setupSessionUI(getState,onChoose){
   const editor=$('editor'),advanced=$('advancedContent');for(const panel of [...editor.children].filter(e=>e.classList.contains('panel')))advanced.append(panel);
   for(const id of ['maxClients','practiceMinutes','qualifyMinutes','raceLaps','weather','ambient','timeOfDay'])$('basicSettings').append($(id).closest('label'));
-  for(const id of ['start','stop','restart'])$('sessionActions').append($(id));$('start').classList.add('primary');$('sessionState').replaceWith($('agentStatus'));
+  for(const id of ['start','stop','restart','joinSession'])$('sessionActions').append($(id));$('start').classList.add('primary');$('sessionState').replaceWith($('agentStatus'));
   $('sessionSave').onclick=()=>$('savePreset').click();$('sessionNew').onclick=()=>$('newPreset').click();$('sessionSave').parentElement.append($('saveStatus'));
   let pickerKind='tracks',favorites=[],preparing=false,running=false,coverIndex={};const loadedCovers=new Map();
   readFavorites('https://assettomods-ea691-default-rtdb.firebaseio.com').then(x=>{favorites=x;if($('modPicker').open)picker();}).catch(()=>{});
