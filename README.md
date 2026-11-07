@@ -2,7 +2,7 @@
 
 Esta carpeta es una versión independiente para publicar. La aplicación original y sus datos siguen en `../assetto-library`. GitHub Pages sirve archivos estáticos: la página pública permite consultar, buscar, filtrar y navegar las galerías. Los botones de descarga abren Drive; Google puede pedir inicio de sesión o confirmar archivos grandes. Los visitantes necesitan permiso de Drive para cada archivo; no se modifican permisos ni se publican automáticamente los archivos.
 
-El catálogo, los nombres, los identificadores de Drive y las imágenes incluidas en esta carpeta serán públicos. No subas esta carpeta si no querés que esa información sea visible. Las portadas se optimizaron y copiaron, sin borrar las originales. La edición de metadatos y portadas sigue disponible en la aplicación de tu PC. No hay edición ni subida pública: sin protección, habilitar operaciones que modifican el Drive sería inseguro. La aplicación local actual permite subir imágenes, pero no implementa la subida de archivos de mods desde la web.
+El catálogo, los nombres, los identificadores de Drive y las imágenes incluidas en esta carpeta serán públicos. No subas esta carpeta si no querés que esa información sea visible. Las portadas se optimizaron y copiaron, sin borrar las originales. Las dos cuentas administradoras pueden editar metadatos y portadas desde la web pública mediante Google y las reglas de Firebase; esos cambios no modifican los archivos de Drive. No hay subida pública de archivos de mods. La aplicación local actual permite subir imágenes, pero no implementa la subida de archivos de mods desde la web.
 
 ## Publicar
 

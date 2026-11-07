@@ -40,6 +40,30 @@
           ".validate": false
         }
       }
+    },
+    "customCoverIndex": {
+      ".read": true,
+      "$id": {
+        ".write": "auth != null && auth.token.email_verified === true && auth.token.firebase.sign_in_provider === 'google.com' && (auth.token.email === 'navarrofabian315@gmail.com' || auth.token.email === 'aguspaz133@gmail.com') && $id.matches(/^[A-Za-z0-9_-]{10,150}$/)",
+        ".validate": "newData.val() === true"
+      }
+    },
+    "customCovers": {
+      "$id": {
+        ".read": true,
+        "overrides": {
+          "$n": {
+            ".write": "auth != null && auth.token.email_verified === true && auth.token.firebase.sign_in_provider === 'google.com' && (auth.token.email === 'navarrofabian315@gmail.com' || auth.token.email === 'aguspaz133@gmail.com') && $id.matches(/^[A-Za-z0-9_-]{10,150}$/) && $n.matches(/^([0-9]|[1-4][0-9])$/)",
+            ".validate": "newData.isString() && newData.val().length <= 250000 && newData.val().beginsWith('data:image/webp;base64,')"
+          }
+        },
+        "added": {
+          "$key": {
+            ".write": "auth != null && auth.token.email_verified === true && auth.token.firebase.sign_in_provider === 'google.com' && (auth.token.email === 'navarrofabian315@gmail.com' || auth.token.email === 'aguspaz133@gmail.com') && $id.matches(/^[A-Za-z0-9_-]{10,150}$/) && $key.matches(/^[A-Za-z0-9_-]{10,70}$/)",
+            ".validate": "newData.isString() && newData.val().length <= 250000 && newData.val().beginsWith('data:image/webp;base64,')"
+          }
+        }
+      }
     }
   }
 }
