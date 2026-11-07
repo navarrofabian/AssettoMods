@@ -16,6 +16,8 @@ Iniciá el agente con `local-agent/iniciar-agente.cmd` o `node local-agent/agent
 
 El agente escucha solo en `127.0.0.1:8876`, acepta solicitudes del dominio de la biblioteca y verifica la firma y las credenciales de Firebase de los dos administradores. El navegador puede solicitar permiso para acceder a la red local. Esto permite controlar el servidor **desde el navegador de la misma PC**, no desde la computadora remota de un amigo; para eso haría falta un canal adicional seguro. El estado de jugadores usa el endpoint local `/JSON0` y depende de que el servidor esté listo y su puerto HTTP coincida con el configurado.
 
+El servidor se ejecuta en un directorio de trabajo aislado que enlaza al contenido instalado y utiliza una copia de `data_track_params.ini`. Las coordenadas opcionales de circuitos no reconocidos se configuran localmente en `trackParameters` dentro de `agent-config.json`; para la prueba de Buenos Aires ya están configuradas en esta computadora. Los archivos originales del servidor no se modifican. Algunas instalaciones o plugins personalizados pueden requerir recursos adicionales y deben probarse antes de usarlos.
+
 El agente no configura Radmin, puertos de red, firewall, instalaciones de mods ni acceso a Drive. Clasificación y carrera son experimentales en AssettoServer. Antes de usarlo con jugadores, verificá los IDs, puertos, versiones, rutas, IA y los enlaces; hacé una prueba con Content Manager y un cliente sin el contenido instalado.
 
 ## Puente de descargas privadas
