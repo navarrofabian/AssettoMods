@@ -13,7 +13,7 @@ const response=await fetch(process.env.ASSETTO_LOCAL_URL||'http://127.0.0.1:8765
 if(!response.ok)throw Error('No se pudo leer el catálogo local. Iniciá la biblioteca primero.');
 const state=await response.json();
 if(!Array.isArray(state.mods)||!state.covers)throw Error('El servidor no devolvió un catálogo válido.');
-const fields=['id','name','displayName','category','group','subcategory','scope','country','tags','size','modifiedTime','mimeType'];
+const fields=['id','name','displayName','category','group','subcategory','scope','country','tags','size','createdTime','modifiedTime','mimeType'];
 const mods=state.mods.map(item=>Object.fromEntries(fields.filter(k=>item[k]!==undefined).map(k=>[k,item[k]])));
 const ids=new Set(mods.map(x=>x.id));
 const needed=new Map();

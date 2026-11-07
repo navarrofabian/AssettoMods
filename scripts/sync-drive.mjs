@@ -18,7 +18,7 @@ while (folders.length) {
   seen.add(folder.id);
   let pageToken;
   do {
-    const params = new URLSearchParams({q:`'${folder.id}' in parents and trashed = false`,fields:'nextPageToken,files(id,name,mimeType,size,modifiedTime)',pageSize:'1000',supportsAllDrives:'true',includeItemsFromAllDrives:'true'});
+    const params = new URLSearchParams({q:`'${folder.id}' in parents and trashed = false`,fields:'nextPageToken,files(id,name,mimeType,size,createdTime,modifiedTime)',pageSize:'1000',supportsAllDrives:'true',includeItemsFromAllDrives:'true'});
     if (pageToken) params.set('pageToken',pageToken);
     const response = await fetch('https://www.googleapis.com/drive/v3/files?'+params, {headers:{authorization:`Bearer ${access_token}`}});
     if (!response.ok) throw new Error(`No se pudo leer Drive (HTTP ${response.status}); se conserva la página anterior.`);
