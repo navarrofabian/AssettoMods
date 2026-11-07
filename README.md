@@ -22,7 +22,7 @@ Sin secretos se publica la copia actual, pero no se actualiza desde Drive. Si so
 
 Cada cambio en `main`, ejecución manual o ejecución programada (aproximadamente cada 5 minutos) consulta Drive en modo lectura. GitHub puede retrasar o desactivar tareas programadas; no hay garantía de horario exacto. Las modificaciones manuales del catálogo publicado se conservan usando la copia del repositorio como base. Si falla la consulta, no se reemplaza la página anterior. No se borra ni modifica nada en Drive.
 
-Para publicar cambios de nombres, categorías o imágenes hechos después en tu PC: iniciá primero la biblioteca local, abrí una terminal en esta carpeta y ejecutá `npm install` y luego `npm run export:local`. Revisá los cambios en `snapshot` y subilos a `main`. Si los archivos se cambiaron en Drive pero no editaste metadatos o imágenes locales, no hace falta hacer esto: la tarea programada los detecta. Las portadas nuevas no se extraen automáticamente en la web pública.
+Para publicar cambios de nombres, categorías o imágenes hechos después en tu PC: iniciá primero la biblioteca local, abrí una terminal en esta carpeta y ejecutá `npm install` y luego `npm run export:local`. Revisá los cambios en `snapshot` y subilos a `main`. Si los archivos se cambiaron en Drive pero no editaste metadatos o imágenes locales, no hace falta hacer esto: la tarea programada los detecta.
 
 ## Probar en la PC
 
@@ -40,3 +40,5 @@ La web admite una base **Firebase Realtime Database dedicada exclusivamente a fa
 4. En **Actions → Publicar biblioteca → Run workflow**, iniciá una publicación manual. Una vez terminada, abrí la web pública en dos dispositivos, marcá un mod como favorito y comprobá que aparece en el otro al recargar. Luego desmarcalo si era una prueba.
 
 Los favoritos públicos y los de la versión local son independientes. El cliente público vuelve a consultar los cambios periódicamente. Si falla la conexión o las reglas rechazan una operación, la página muestra un error. Firebase aplica límites al plan gratuito y puede restringir el servicio si se exceden.
+
+La sincronización también busca vistas previas en hasta tres mods recientes sin portada por ejecución. Lee únicamente fragmentos limitados del comprimido, optimiza las imágenes encontradas y conserva las portadas existentes. ZIP64, archivos cifrados, algunos RAR/7z sólidos y mods sin un archivo `preview` compatible pueden quedar sin portada. Los resultados se guardan en el repositorio público como imágenes optimizadas; los archivos originales no se modifican.

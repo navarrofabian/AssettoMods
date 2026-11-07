@@ -6,6 +6,7 @@
   "scripts": {
     "export:local": "node scripts/export-local.mjs",
     "sync:drive": "node scripts/sync-drive.mjs",
+    "import:covers": "node scripts/import-covers.mjs",
     "build": "node scripts/build.mjs",
     "test": "node --test tests/*.test.mjs"
   },
