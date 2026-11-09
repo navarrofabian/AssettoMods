@@ -26,3 +26,9 @@ test('relaciona nombres guardados y archivos con instalaciones solo si la coinci
   assert.equal(matchInstalled('806',['tcc_peugeot_806_procar']),'');
   assert.equal(matchInstalled('sin coincidencia',['spa']),'');
 });
+
+test('configura los calentadores de neumáticos y conserva el valor desactivado por defecto',()=>{
+  assert.match(generateServerFiles(base).files['server_cfg.ini'],/^TYRE_BLANKETS_ALLOWED=0$/m);
+  assert.match(generateServerFiles({...base,tyreBlankets:true}).files['server_cfg.ini'],/^TYRE_BLANKETS_ALLOWED=1$/m);
+  assert.match(generateServerFiles({...base,tyreBlankets:false}).files['server_cfg.ini'],/^TYRE_BLANKETS_ALLOWED=0$/m);
+});
