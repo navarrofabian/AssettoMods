@@ -32,3 +32,10 @@ test('configura los calentadores de neumáticos y conserva el valor desactivado 
   assert.match(generateServerFiles({...base,tyreBlankets:true}).files['server_cfg.ini'],/^TYRE_BLANKETS_ALLOWED=1$/m);
   assert.match(generateServerFiles({...base,tyreBlankets:false}).files['server_cfg.ini'],/^TYRE_BLANKETS_ALLOWED=0$/m);
 });
+
+test('crea enlaces de descarga directamente a Google Drive',()=>{
+  const url=new URL(driveDownload('1234567890abcdefgh'));
+  assert.equal(url.hostname,'drive.usercontent.google.com');
+  assert.equal(url.searchParams.get('id'),'1234567890abcdefgh');
+  assert.equal(url.searchParams.get('confirm'),'t');
+});
