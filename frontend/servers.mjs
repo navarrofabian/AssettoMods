@@ -36,14 +36,14 @@ async function chooseMod(kind,mod,progress){
     else if(knownPack){$('carMod').value=mod.id;$('addCar').click();}else{addCar({name:mod.displayName||mod.name,modId:mod.id,id:found,skin:installed.skins[found]?.[0]||'',url:driveDownload(mod.id)});}
     refreshSession();return;
   }
-  const job=await importMod(mod.id,kind,progress);await loadContent();
-  if(kind==='tracks'){$('trackMod').value=mod.id;$('trackMod').dispatchEvent(new Event('change',{bubbles:true}));if(job.items.length===1){const item=job.items[0],layout=item.layouts.length===1?item.layouts[0]:'';trackOptions(item.id,layout);}else{trackOptions('','');message('contentStatus','El paquete tiene varios circuitos. Elegí el que querés usar en la vista previa.');}}
+  const job=await importMod(mod.id,kind,progress);progress('Actualizando la vista previa…');if(!await loadContent())throw Error('El mod se descargó, pero no se pudo actualizar el contenido. Revisá que el agente siga abierto y volvé a seleccionarlo.');
+  if(kind==='tracks'){if(!job.items?.length)throw Error('El archivo no contiene circuitos compatibles.');$('trackMod').value=mod.id;$('trackMod').dispatchEvent(new Event('change',{bubbles:true}));const item=job.items[0],layout=item.layouts.length===1?item.layouts[0]:'';trackOptions(item.id,layout);if(job.items.length>1)message('contentStatus','El paquete contiene varios circuitos. Se seleccionó el primero; podés cambiarlo en opciones avanzadas.');}
   else{const existing=new Set(values().cars.map(c=>c.id));for(const item of job.items)if(!existing.has(item.id))addCar({id:item.id,name:mod.displayName||mod.name,modId:mod.id,skin:installed.skins[item.id]?.[0]||item.skins?.[0]||'',url:driveDownload(mod.id)});}
   refreshSession();
 }
 async function importMod(modId,kind,progress){
   let token=await getAdminToken();let response=await fetch('http://127.0.0.1:8876/import-mod',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({preset:{modId,kind}}),signal:AbortSignal.timeout(10000)});let job=await response.json().catch(()=>({}));if(!response.ok)throw Error(job.error||'No se pudo iniciar la carga. Comprobá que el agente esté actualizado.');
-  while(job.status==='running'){const percent=job.size?` ${Math.floor(job.downloaded*100/job.size)}%`:'';progress((job.phase||'Preparando…')+percent);await new Promise(resolve=>setTimeout(resolve,1500));token=await getAdminToken();response=await fetch('http://127.0.0.1:8876/import-status',{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(10000)});job=await response.json();if(!response.ok)throw Error(job.error||'No se pudo consultar la carga.');}
+  while(job.status==='running'){const downloading=String(job.phase||'').startsWith('Descargando');const percent=downloading&&job.size?` ${Math.min(100,Math.floor(job.downloaded*100/job.size))}%`:'';const files=!downloading&&job.total?` (${job.done||0}/${job.total})`:'';progress((job.phase||'Preparando…')+percent+files);await new Promise(resolve=>setTimeout(resolve,1500));token=await getAdminToken();response=await fetch('http://127.0.0.1:8876/import-status',{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(10000)});job=await response.json();if(!response.ok)throw Error(job.error||'No se pudo consultar la carga.');}
   if(job.status!=='done')throw Error(job.phase||'No se pudo preparar el mod.');return job;
 }
 $('trackId').onchange=()=>trackOptions($('trackId').value,'');
