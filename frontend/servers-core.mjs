@@ -29,13 +29,15 @@ export function generateServerFiles(p){
   if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(p.timeOfDay||''))throw Error('Indicá una hora válida.');
   const [hours,mins]=p.timeOfDay.split(':').map(Number),seconds=hours*3600+mins*60,mult=number(p.timeMultiplier,'Multiplicador de tiempo',0,100);
   if(!['none','auto','fixed'].includes(p.aiMode))throw Error('Modo de IA inválido.');
+  if(p.gridTest && (p.aiMode!=='auto'||max<2||qualify>0||laps>0))throw Error('La prueba de grilla requiere IA automática, al menos dos puestos y solo práctica.');
+  if(p.gridTest)number(p.gridTestSlot,'Cajón de grilla',0,999);
   const content={cars:{}};for(const c of cars){if(!c.url)continue;const existing=content.cars[c.id];if(existing&&existing.url!==c.url)throw Error(`El auto ${c.id} tiene enlaces distintos.`);content.cars[c.id]={url:c.url,...(c.version?{version:c.version}:{})};}
   if(trackUrl)content.track={url:trackUrl,...(trackVersion?{version:trackVersion}:{})};
   const session=['[PRACTICE]','NAME=Práctica',`TIME=${minutes}`,'IS_OPEN=1',`INFINITE=${p.infinite?'1':'0'}`];
   if(qualify>0){session.push('','[QUALIFY]','NAME=Clasificación',`TIME=${qualify}`,'IS_OPEN=1');}
   if(laps>0){session.push('','[RACE]','NAME=Carrera',`LAPS=${laps}`,'WAIT_TIME=60','IS_OPEN=0');}
   const cfg=['[SERVER]',`NAME=${name}`,`TRACK=${track}`,`CONFIG_TRACK=${layout}`,`CARS=${[...new Set(cars.map(c=>c.id))].join(';')}`,`MAX_CLIENTS=${max}`,`UDP_PORT=${udp}`,`TCP_PORT=${tcp}`,`HTTP_PORT=${http}`,`SUN_ANGLE=${sun}`,'CLIENT_SEND_INTERVAL_HZ=20','LOOP_MODE=1',`REGISTER_TO_LOBBY=${p.publicLobby?'1':'0'}`,'FUEL_RATE=100','DAMAGE_MULTIPLIER=0','TYRE_WEAR_RATE=100','ALLOWED_TYRES_OUT=-1','ABS_ALLOWED=1','TC_ALLOWED=1','STABILITY_ALLOWED=0','AUTOCLUTCH_ALLOWED=0',`TYRE_BLANKETS_ALLOWED=${p.tyreBlankets===true?'1':'0'}`,'FORCE_VIRTUAL_MIRROR=0',`TIME_OF_DAY_MULT=${mult}`,'','[WEATHER_0]',`GRAPHICS=${weather}_time=${seconds}_mult=${mult}`,`BASE_TEMPERATURE_AMBIENT=${ambient}`,'BASE_TEMPERATURE_ROAD=6','VARIATION_AMBIENT=2','VARIATION_ROAD=1','WIND_BASE_SPEED_MIN=0','WIND_BASE_SPEED_MAX=0','WIND_BASE_DIRECTION=0','WIND_VARIATION_DIRECTION=0','',...session,''].join('\n');
-  const entries=Array.from({length:max},(_,i)=>{const c=cars[i%cars.length];return [`[CAR_${i}]`,`MODEL=${c.id}`,`SKIN=${c.skin}`,'BALLAST=0','RESTRICTOR=0',`AI=${p.aiMode}`,''].join('\n');}).join('\n');
+  const entries=Array.from({length:max},(_,i)=>{const c=cars[i%cars.length];const mode=p.gridTest?(i===1?'fixed':'none'):p.aiMode;return [`[CAR_${i}]`,`MODEL=${c.id}`,`SKIN=${c.skin}`,'BALLAST=0','RESTRICTOR=0',`AI=${mode}`,''].join('\n');}).join('\n');
   const extra=['# Revisá y combiná estas opciones con tu extra_cfg.yml existente.','EnableServerDetails: true',`EnableAi: ${p.aiMode!=='none'}`,''].join('\n');
   const warnings=[];if(!trackUrl||cars.some(c=>!c.url))warnings.push('Hay mods sin enlace de descarga.');
   if([trackUrl,...cars.map(c=>c.url)].some(u=>u.includes('drive.google.com')||u.includes('drive.usercontent.google.com')))warnings.push('Los enlaces de Drive necesitan una prueba real en Content Manager: pueden requerir acceso o confirmación.');

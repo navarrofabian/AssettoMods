@@ -39,3 +39,10 @@ test('crea enlaces de descarga directamente a Google Drive',()=>{
   assert.equal(url.searchParams.get('id'),'1234567890abcdefgh');
   assert.equal(url.searchParams.get('confirm'),'t');
 });
+
+test('la prueba de grilla reserva un jugador y una sola IA fija',()=>{
+ const files=generateServerFiles({...base,aiMode:'auto',gridTest:true,gridTestSlot:0}).files;
+ assert.match(files['entry_list.ini'],/\[CAR_0\][\s\S]*?AI=none/);
+ assert.match(files['entry_list.ini'],/\[CAR_1\][\s\S]*?AI=fixed/);
+ assert.throws(()=>generateServerFiles({...base,aiMode:'auto',gridTest:true,gridTestSlot:0,raceLaps:1}),/solo práctica/);
+});
